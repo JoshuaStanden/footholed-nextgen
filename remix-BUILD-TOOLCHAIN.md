@@ -89,13 +89,22 @@ Flag notes:
 
 ## 4. Flash (Windows, BOOTSEL drag)
 
+**Use `tools\flash_pico.ps1` — it automates all of this and refuses to claim
+success until the drive vanishes (the only real proof the Pico rebooted):**
+
+```powershell
+powershell -ExecutionPolicy Bypass -File tools\flash_pico.ps1 build\<x>.uf2
+powershell -ExecutionPolicy Bypass -File tools\flash_pico.ps1 build\<x>.uf2 -Picotool   # USB flash + verify
+```
+
+Manual steps (what the script does, for reference):
 1. Hold **BOOTSEL** on the Pico while plugging in USB. It mounts as a drive
    named `RPI-RP2`.
 2. Copy the `.uf2` onto it with PowerShell `Copy-Item` and then eject:
    a bare `cp` in git-bash does NOT reliably flash — use `Copy-Item` + eject.
-3. The Pico reboots into the new firmware. **Boot-blink signatures** tell you it
-   is running (e.g. the GPS/cc1101/sx1262 blades blink a known count at boot —
-   see each blade's code/docs).
+3. The Pico reboots into the new firmware — the drive vanishing IS the reboot
+   proof; if it is still mounted, the flash did not take. **Boot-blink
+   signatures** tell you it is running (see each blade's code/docs).
 
 ---
 
