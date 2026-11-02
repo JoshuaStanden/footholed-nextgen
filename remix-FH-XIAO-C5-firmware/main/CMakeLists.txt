@@ -10,7 +10,10 @@ idf_component_register(
         esp_netif
         nvs_flash
         esp_timer
-        driver              # gpio (umbrella)
+        driver              # legacy umbrella (gpio moved out on IDF 6.x)
+        esp_driver_gpio     # driver/gpio.h — REQUIRED on IDF 6.1 (the `driver`
+                            # umbrella no longer covers it; found by the first
+                            # fresh-clone build 2026-11-02)
         esp_driver_spi      # spi_slave_hd (quad SPI Slave HD, Bus A)
         fh_protocol         # FROZEN shared wire protocol component
 )
