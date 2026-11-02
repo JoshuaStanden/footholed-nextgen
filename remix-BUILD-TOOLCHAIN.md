@@ -89,8 +89,11 @@ Flag notes:
 
 ## 4. Flash (Windows, BOOTSEL drag)
 
-**Use `tools\flash_pico.ps1` — it automates all of this and refuses to claim
-success until the drive vanishes (the only real proof the Pico rebooted):**
+**Use `tools\flash_pico.ps1` — it automates this AND proves the UF2 was
+recognized: after the copy (still in BOOTSEL) it runs `picotool verify`, which
+reads the device's flash back over USB and compares it byte-for-byte against
+the file. Copy+eject alone only proves the write was flushed — verify is the
+recognition proof, and the drive vanishing is only the reboot proof:**
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File tools\flash_pico.ps1 build\<x>.uf2

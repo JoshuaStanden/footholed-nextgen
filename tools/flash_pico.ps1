@@ -59,6 +59,22 @@ $letter = $drive.DeviceID
 Write-Host "Found BOOTSEL drive at $letter - copying $([System.IO.Path]::GetFileName($Uf2)) ..."
 Copy-Item $Uf2 "$letter\" -Force
 
+# THE recognition proof: while still in BOOTSEL (before eject), read the
+# device's flash back over USB and compare against the file. Copy+eject alone
+# only proves the write was flushed - NOT that the UF2 was accepted into flash.
+$picotoolVerified = $false
+if (Test-Path $PicotoolPath) {
+    & $PicotoolPath verify $Uf2
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host "FAIL: picotool VERIFY MISMATCH - the device flash does NOT match the file. Do NOT trust this flash." -ForegroundColor Red
+        exit 1
+    }
+    $picotoolVerified = $true
+    Write-Host "VERIFIED: device flash matches the file byte-for-byte." -ForegroundColor Green
+} else {
+    Write-Host "WARN: picotool not found - skipping flash verification (copy+eject alone does not prove recognition)." -ForegroundColor Yellow
+}
+
 # Eject via Shell.Application (the eject is what triggers the reboot)
 $shell = New-Object -ComObject Shell.Application
 $ejected = $false
@@ -82,7 +98,9 @@ foreach ($i in 1..30) {
     $gone = -not (Get-CimInstance Win32_LogicalDisk -Filter "DriveType=2" |
         Where-Object { $_.VolumeName -match "RPI-?RP2" })
     if ($gone) {
-        Write-Host "FLASHED + REBOOTED (drive vanished = Pico rebooted into new firmware)" -ForegroundColor Green
+        Write-Host "COPIED + EJECTED + drive vanished = the Pico REBOOTED. This does NOT prove the UF2 was recognized." -ForegroundColor Green
+        Write-Host "Confirm it took: check the blade's boot-blink signature, or verify flash against the file:" -ForegroundColor Cyan
+        Write-Host "  powershell -File tools\flash_pico.ps1 $Uf2 -Picotool   (load + verify)   -- or --   $PicotoolPath verify -f $Uf2" -ForegroundColor Cyan
         exit 0
     }
 }
