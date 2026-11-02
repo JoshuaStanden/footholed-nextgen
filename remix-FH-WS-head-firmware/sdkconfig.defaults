@@ -1,0 +1,66 @@
+# sdkconfig.defaults — FHAdvanced-REMIX Waveshare HEAD (ESP32-S3-Touch-LCD-3.5).
+# Target: esp32s3 (idf.py set-target esp32s3). ESP-IDF 6.1.x, LVGL 9.2.x.
+#
+# This mirrors the PROVEN original FootHoled board config (josh-dev
+# firmware/sdkconfig.defaults + DISPLAY_NOTES.md), which is bench-working on
+# THIS board, adapted for the REMIX head (no Wi-Fi/BLE/SD on the head — it is a
+# Bus-A SPI peer; those blocks are dropped). Do not "fix" the PSRAM to QUAD.
+
+# ---- Console on USB-Serial-JTAG (USB-C) -------------------------------------
+CONFIG_ESP_CONSOLE_USB_SERIAL_JTAG=y
+
+# ---- FreeRTOS tick 1 kHz (matches the hub + the other peers) ----------------
+CONFIG_FREERTOS_HZ=1000
+
+# ---- Flash + custom partition table (16 MB) ---------------------------------
+CONFIG_ESPTOOLPY_FLASHSIZE_16MB=y
+
+# ---- PSRAM: the ESP32-S3R8 uses 8 MB *OCTAL* PSRAM. DO NOT set QUAD. ---------
+#   The proven FootHoled board (josh-dev firmware/DISPLAY_NOTES.md) documents
+#   this explicitly: "anything larger than 4 MB is octal". QUAD mode never
+#   initialises the R8's octal PSRAM, init fails at boot, the LVGL draw buffers
+#   can't allocate, and the display dies. The Waveshare marketing phrase
+#   "stacked 8MB PSRAM" misleads here. Keep OCT.
+CONFIG_SPIRAM=y
+CONFIG_SPIRAM_USE_MALLOC=y
+CONFIG_SPIRAM_MODE_OCT=y
+CONFIG_SPIRAM_SPEED_80M=y
+CONFIG_SPIRAM_FETCH_INSTRUCTIONS=y
+CONFIG_SPIRAM_RODATA=y
+
+# ---- LVGL draw buffers need internal DMA RAM (S3 SPI-DMA can't read PSRAM).
+#   Reserve a 128 KB internal DMA pool up front so the draw buffers always fit.
+#   (Proven robust fix from the original FootHoled board bring-up.) The head has
+#   no radios, so the fragmentation race is milder, but the reserve is harmless
+#   and keeps us aligned with the known-good config. --------------------------
+CONFIG_SPIRAM_MALLOC_RESERVE_INTERNAL=131072
+CONFIG_SPI_MASTER_IN_IRAM=y
+
+# ---- Larger main task stack for LVGL init -----------------------------------
+CONFIG_ESP_MAIN_TASK_STACK_SIZE=8192
+
+# ---- LVGL (lvgl/lvgl 9.2.x) via Kconfig (idf.py does not read lv_conf.h) -----
+CONFIG_LV_CONF_SKIP=y
+CONFIG_LV_COLOR_DEPTH_16=y
+CONFIG_LV_FONT_MONTSERRAT_14=y
+CONFIG_LV_FONT_MONTSERRAT_28=y
+CONFIG_LV_FONT_DEFAULT_MONTSERRAT_14=y
+CONFIG_LV_USE_FLEX=y
+CONFIG_LV_USE_LABEL=y
+CONFIG_LV_USE_BUTTON=y
+CONFIG_LV_USE_SWITCH=y
+CONFIG_LV_USE_BAR=y
+CONFIG_LV_USE_SLIDER=y
+CONFIG_LV_USE_LINE=y
+CONFIG_LV_USE_IMAGE=y
+CONFIG_LV_USE_CLIB_MALLOC=y
+CONFIG_LV_USE_CLIB_STRING=y
+CONFIG_LV_USE_CLIB_SPRINTF=y
+CONFIG_LV_USE_DRAW_SW=y
+CONFIG_LV_DRAW_SW_COMPLEX=y
+
+# ---- Logging -----------------------------------------------------------------
+CONFIG_LOG_DEFAULT_LEVEL_INFO=y
+
+# ---- Task watchdog on -------------------------------------------------------
+CONFIG_ESP_TASK_WDT_EN=y

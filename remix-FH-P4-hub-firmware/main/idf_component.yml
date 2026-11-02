@@ -1,0 +1,13 @@
+# Managed component dependencies for the FHAdvanced-REMIX hub (main component).
+#
+# esp_serial_slave_link is an idf-extra-component (NOT bundled in core ESP-IDF).
+# It provides the ESSL HD master API. The hub uses ONLY the segment-mode DMA
+# calls essl_spi_rddma / essl_spi_wrdma on the raw spi_device_handle_t (NOT
+# essl_spi_init_dev / essl_handle_t, which are for the Append path) to talk to
+# the Bus-A spi_slave_hd peers
+# (XIAO-S3, XIAO-C5, Waveshare head). See ../../remix-BUS-A-QUAD-HD-DECISION.md.
+#
+# `idf.py reconfigure` (or the next build) fetches it into managed_components/.
+dependencies:
+  idf: ">=5.3"
+  espressif/esp_serial_slave_link: "^1.1.0"

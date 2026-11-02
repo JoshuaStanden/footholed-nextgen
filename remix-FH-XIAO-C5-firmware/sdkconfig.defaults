@@ -1,0 +1,17 @@
+# sdkconfig.defaults — FHAdvanced-REMIX XIAO-C5 (5 GHz sniffer, SPI slave).
+# Target: esp32c5 (idf.py set-target esp32c5).
+
+# ---- Console on USB-Serial-JTAG (USB-C): keeps the SPI/IRQ GPIOs free -------
+CONFIG_ESP_CONSOLE_USB_SERIAL_JTAG=y
+
+# ---- FreeRTOS tick 1 kHz (matches the hub + dwell timing) -------------------
+CONFIG_FREERTOS_HZ=1000
+
+# ---- Wi-Fi: promiscuous sniffer; no station/AP -------------------------------
+# (esp_wifi defaults are fine; the firmware sets WIFI_MODE_NULL + promiscuous.)
+
+# ---- Logging -----------------------------------------------------------------
+CONFIG_LOG_DEFAULT_LEVEL_INFO=y
+
+# ---- Task watchdog on (tasks yield: vTaskDelay / blocking slave xfer) --------
+CONFIG_ESP_TASK_WDT_EN=y

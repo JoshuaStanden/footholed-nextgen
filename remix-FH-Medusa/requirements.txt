@@ -1,0 +1,10 @@
+# FH_Medusa dependencies.  Install with:  pip install -r requirements.txt
+#
+# textual — the RECOMMENDED cross-platform TUI (tui_textual.py). Works on
+#           Windows / PowerShell / macOS / Linux. Without it, tui_textual.py
+#           prints an install hint and you fall back to the stdlib curses tui.py.
+textual>=0.60
+
+# pyserial — ONLY needed to talk to REAL hardware over a serial port. The
+#            simulator (python3 tui_textual.py --sim) does NOT need it.
+# pyserial>=3.5      # uncomment when you connect a real hub

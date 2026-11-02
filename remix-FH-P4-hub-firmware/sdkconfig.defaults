@@ -1,0 +1,69 @@
+# sdkconfig.defaults — FHAdvanced-REMIX HUB (ESP32-P4-WIFI6-DB).
+# First-build baseline. These encode assumptions the firmware MAKES — verify at
+# bring-up. Target: esp32p4 (idf.py set-target esp32p4).
+
+# ---- Console on UART0 (the board's one USB-C goes to a CH343 USB-UART) -------
+# BENCH FACT (2026-10-30): the P4-WIFI6-DB's only USB-C enumerates on the PC as
+# "USB-Enhanced-SERIAL CH343". That chip is wired to UART0, NOT to the P4's
+# native USB-Serial-JTAG pins. With the console on USB-Serial-JTAG, every byte
+# after the ROM banner (bootloader, app logs, Medusa frames) went to pins that
+# have no cable. UART0 is the console, and the Medusa bridge transport, because
+# fh_hub_bridge.c uses plain stdin/stdout.
+# 921600 = Medusa's fixed baud (medusa/session.py default; no CLI flag).
+# idf.py monitor picks this up from sdkconfig automatically.
+# BENCH FIX (2026-10-30): the baud is only settable with UART_CUSTOM. Under
+# UART_DEFAULT Kconfig silently pinned it to 115200. Custom = same UART0 on the
+# same pins (TX 37 / RX 38, as the boot log reported).
+CONFIG_ESP_CONSOLE_UART_CUSTOM=y
+CONFIG_ESP_CONSOLE_UART_CUSTOM_NUM_0=y
+CONFIG_ESP_CONSOLE_UART_TX_GPIO=37
+CONFIG_ESP_CONSOLE_UART_RX_GPIO=38
+CONFIG_ESP_CONSOLE_UART_BAUDRATE=921600
+
+# ---- Line endings: LF ONLY — DO NOT CHANGE (Medusa bridge invariant) ---------
+# The INTERACTIVE-mode USB bridge (fh_hub_bridge.c) streams raw BINARY protocol
+# frames over stdout and reads them over stdin. LF->CRLF translation would turn
+# every 0x0A inside a frame into 0x0D 0x0A and the host's CRC would reject it
+# (the classic "bench-passes-on-text, field-flakes-on-binary" corruption).
+# Forcing LF both directions makes the stream byte-transparent.
+CONFIG_NEWLIB_STDOUT_LINE_ENDING_LF=y
+CONFIG_NEWLIB_STDIN_LINE_ENDING_LF=y
+
+# ---- PSRAM: the ESP32-P4NRW32X has 32 MB in-package PSRAM --------------------
+CONFIG_SPIRAM=y
+# P4 PSRAM mode/speed are set by the module; leave the IDF P4 defaults unless a
+# bring-up issue appears. (Do NOT copy the S3's OCT/80M lines — different chip.)
+
+# ---- Flash: 32 MB Nor Flash onboard ------------------------------------------
+CONFIG_ESPTOOLPY_FLASHSIZE_32MB=y
+
+# ---- Bluetooth: NimBLE, BLE-only (pass 2 turns the observer on) --------------
+# On the P4 the BLE/Wi-Fi controller is the ONBOARD ESP32-C5 over SDIO. Enable
+# the host now so the pass-2 BLE sniffer links; the controller is brought up by
+# the P4's wireless-coprocessor support. (Pass 1 leaves the sniffer a stub.)
+CONFIG_BT_ENABLED=y
+CONFIG_BT_NIMBLE_ENABLED=y
+CONFIG_BT_CONTROLLER_DISABLED=y
+CONFIG_BT_NIMBLE_TRANSPORT_UART=n
+CONFIG_BT_NIMBLE_ROLE_OBSERVER=y
+
+# Onboard co-processor is an ESP32-C6 reached over SDIO via ESP-Hosted (VHCI).
+# BENCH FACT (2026-10-30): the chip answered "Identified slave [esp32c6]".
+# Selecting C5 made ESP-Hosted abort the link.
+CONFIG_SLAVE_IDF_TARGET_ESP32C6=y
+CONFIG_ESP_WIFI_REMOTE_LIBRARY_HOSTED=y
+CONFIG_ESP_HOSTED_ENABLE_BT_NIMBLE=y
+CONFIG_ESP_HOSTED_NIMBLE_HCI_VHCI=y
+
+# ---- FATFS on the microSD ----------------------------------------------------
+CONFIG_FATFS_LFN_HEAP=y
+CONFIG_FATFS_MAX_LFN=255
+
+# ---- FreeRTOS tick: 1 kHz ----------------------------------------------------
+CONFIG_FREERTOS_HZ=1000
+
+# ---- Logging -----------------------------------------------------------------
+CONFIG_LOG_DEFAULT_LEVEL_INFO=y
+
+# ---- Task watchdog: keep it; our tasks yield (vTaskDelay / notify-blocked). --
+CONFIG_ESP_TASK_WDT_EN=y

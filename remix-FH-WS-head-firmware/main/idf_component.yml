@@ -1,0 +1,13 @@
+dependencies:
+  # Toolchain floor — ESP-IDF 6.1.x (matches the hub + the proven FootHoled build).
+  idf: ">=6.1"
+  # LVGL 9.x only — pinned to 9.2 (the proven original-FootHoled line). Do NOT
+  # jump to LVGL 10 (API break). Configured via Kconfig (sdkconfig.defaults).
+  lvgl/lvgl: "~9.2.2"
+  # ST7796 SPI display driver used by fh_ws_board.cpp.
+  espressif/esp_lcd_st7796: ">=1.3.0"
+  # TCA9554 I/O expander — REQUIRED. On the 3.5 (non-B) the ST7796 LCD reset and
+  # the FT6336 touch reset are NOT on ESP32 GPIOs; they hang off the TCA9554.
+  # The adapter pulses expander pin 1 low->high before panel reset/init, or the
+  # display comes up blank though every call returns ESP_OK. (See DISPLAY_NOTES.)
+  espressif/esp_io_expander_tca9554: "^2.0.0"

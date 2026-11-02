@@ -1,0 +1,26 @@
+# ESP-IDF / Arduino build output
+build/
+managed_components/
+dependencies.lock
+sdkconfig.old
+sdkconfig.defaults.old
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Editors / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Local logs / captured artifacts
+*.log
+*.bak
+
+# Pico build artifacts (never commit firmware binaries)
+*.uf2
+*.bin
