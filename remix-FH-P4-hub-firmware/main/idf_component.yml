@@ -11,3 +11,10 @@
 dependencies:
   idf: ">=5.3"
   espressif/esp_serial_slave_link: "^1.1.0"
+  # ESP-Hosted: the C6 co-processor link (SDIO) for hub-local BLE sniff.
+  # PINNED to 2.13.0 — the C6 co-processor was OTA'd to 2.13.0 on 2026-10-30
+  # (hub CONTINUITY §3c) and host/slave versions MUST match. This entry was
+  # missing on the 2026-11-02 fresh-clone build (esp_hosted.h not found) —
+  # the old machine had the component physically present in managed_components/
+  # without the manifest ever declaring it.
+  espressif/esp_hosted: "2.13.0"

@@ -31,6 +31,8 @@ idf_component_register(
         esp_timer           # esp_timer_get_time
         esp_hw_support      # esp_read_mac / esp_mac.h
         bt                  # NimBLE host (controller = onboard C6 via ESP-Hosted/SDIO)
+        esp_hosted          # esp_hosted.h / esp_hosted_misc.h (C6 SDIO link; fetched by
+                            # the component manager — declared in idf_component.yml)
         fh_protocol         # FROZEN shared wire protocol component
 )
 
