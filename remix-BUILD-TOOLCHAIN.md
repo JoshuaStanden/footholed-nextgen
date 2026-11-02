@@ -6,10 +6,12 @@
 > the PROVEN path that already built the bench-working GPS blade, so you do not
 > repeat the picotool/MinGW rabbit hole that derailed earlier attempts.
 >
-> **TL;DR — do NOT build or install picotool. This project deliberately avoids
-> it.** Every blade sets `PICO_NO_PICOTOOL=1` and makes the `.uf2` from the
-> `.bin` with the bundled `uf2conv.py`. If you find yourself installing
-> MinGW/libUSB to make picotool compile, STOP — you are on the wrong path.
+> **TL;DR — never BUILD picotool; use the PREBUILT one.** Every blade sets
+> `PICO_NO_PICOTOOL=1` so the SDK build never touches picotool, and the
+> `.bin` → `.uf2` step uses either the bundled `uf2conv.py` or the prebuilt
+> `picotool.exe` (both produce valid UF2; see §9). If you find yourself
+> installing MinGW/libUSB to make picotool COMPILE, STOP — you are on the
+> wrong path. The prebuilt binary already exists and works.
 
 ---
 
@@ -31,12 +33,11 @@ Four tools, nothing more:
    Standard UF2: 512-byte blocks, RP2040 family id `0xe48bff56`. Pure Python,
    no compiler needed.
 
-**Why no picotool:** picotool normally makes the `.uf2`, BUT picotool must be
-COMPILED FIRST with a NATIVE (host) compiler + libUSB. On Windows that means
-MinGW-w64 + libUSB, which is exactly what failed before. `PICO_NO_PICOTOOL=1`
-tells the SDK "skip picotool, still emit elf/bin/hex"; `uf2conv.py` does the
-rest. Picotool's only lost feature is USB device poking (reboot/flash-over-USB) —
-not needed here; we flash by the BOOTSEL drag method.
+**Why never BUILD picotool:** picotool must be COMPILED with a NATIVE (host)
+compiler + libUSB. On Windows that means MinGW-w64 + libUSB, which is exactly
+what failed before. `PICO_NO_PICOTOOL=1` tells the SDK "skip picotool, still
+emit elf/bin/hex". The `.uf2` comes from `uf2conv.py` (bundled) OR the prebuilt
+`picotool.exe` (§9) — no host compile ever required.
 
 ---
 
@@ -178,3 +179,65 @@ path/version mismatch in §2–§3, not a reason to re-architect the build.
 - **Do NOT change blade source to chase a build error** — build errors are
   toolchain/env issues; source changes are a separate, reviewed activity
   (see `remix-MULTI-CHECK.md` / each blade's `AGENTS.md`).
+
+---
+
+## 9. Host tools on this box — picotool (prebuilt) and mingw64 (roles)
+
+### picotool — PREBUILT, at `C:/Users/Admin/picotool-2.3.1/`
+
+- **Source of the binary:** the OFFICIAL prebuilt from
+  `raspberrypi/pico-sdk-tools` release `v2.3.1-0`
+  (`picotool-2.3.1-x64-win.zip`, extracted 2026-11-02). Never compile it.
+  An older `C:/Users/Admin/picotool-prebuilt/` (v2.0.0) also exists and is
+  proven on real images — 2.3.1's `uf2 convert` output is byte-identical to
+  it (verified 2026-11-02 on a test image), so either works; default to 2.3.1.
+- **USB support is live:** `picotool info` with nothing connected correctly
+  reports "No accessible RP-series devices in BOOTSEL mode" — libusb is
+  statically included in the prebuilt; no libUSB install, no WinUSB driver
+  install needed for BOOTSEL-mode devices.
+- **What it is FOR here:**
+  - `picotool uf2 convert build/<x>.bin build/<x>.uf2 --family rp2040` —
+    the `.bin` → `.uf2` step in the blade recipe (AGENTS.md §3). Produces the
+    same artifact uf2conv.py does (verified byte-identical between picotool
+    2.0.0 and 2.3.1; uf2conv.py output differs in block layout but is also a
+    valid UF2 and is what historically flashed the GPS blade — both are fine).
+  - `picotool load build/<x>.uf2` — flash over USB while the Pico is in
+    BOOTSEL mode. An ALTERNATIVE to the BOOTSEL drag+eject dance (§4), not a
+    replacement policy: if `load` misbehaves on Windows, fall back to the
+    proven `Copy-Item` + eject method.
+  - `picotool info` / `picotool verify` / `picotool save` / `picotool reboot
+    -u` — inspect/verify/backup/reboot devices. `reboot -u` is useful to kick
+    a running blade back into BOOTSEL without touching the board.
+- **What it is NOT for:** the blade BUILD. The SDK never runs picotool
+  (`PICO_NO_PICOTOOL=1` stays set in every CMakeLists).
+
+### `C:\mingw64` — a HOST-ONLY toolchain. Three rules.
+
+It is a full native Windows toolchain (GNU 16.2 / clang, cmake, ninja,
+mingw32-make) — the same toolchain family Raspberry Pi's official picotool
+prebuilt is compiled with. That is its proper universe: HOST programs. It is
+NOT part of the blade build.
+
+1. **Never on the blade-build PATH.** The blade recipe's PATH carries ONLY
+   the ARM cross-compiler (`PICO_TOOLCHAIN_PATH/bin`), ninja
+   (`/c/Espressif/tools/python/Scripts`), and CMake
+   (`/c/Program Files/CMake/bin`). The old `/c/mingw64/bin` entry was
+   REMOVED from AGENTS.md §3 and all eight PICO_LESSONS.md copies
+   (2026-11-02) — it was a leftover from the picotool rabbit hole and could
+   shadow the ARM toolchain with a host-only gcc if PATH order shifted.
+2. **Never compile picotool with it.** That is the rabbit hole that lost
+   control last time; the prebuilt (above) replaced it permanently.
+3. **Legitimate uses:** building/debugging HOST-side tools (a Windows utility
+   for bench use, a Python C-extension, etc.) is fine. Anything that runs on
+   the laptop may use mingw64; anything that runs on a Pico uses pqt-gcc +
+   the Pico SDK, and anything that runs on an ESP32 uses ESP-IDF (separate,
+   untouched).
+
+### ESP-IDF (ESP32 boards) — deliberately separate
+The ESP32-P4 hub and XIAO-S3/C5/head peers build ONLY through ESP-IDF
+(`idf.py`, its own venv + toolchain, COM5 @ 921600). None of the mingw64 or
+Pico toolchain above participates in an ESP-IDF build, and no ESP-IDF tool
+leaks into the Pico build. Three build universes, three disjoint toolchains:
+**pqt-gcc+Pico SDK → Pico blades · ESP-IDF → ESP32 boards · mingw64 → host
+tools only.**

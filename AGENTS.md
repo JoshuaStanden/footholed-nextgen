@@ -38,10 +38,10 @@ Build recipe (deleting `build/` wipes the cached toolchain path):
 ```bash
 export PICO_SDK_PATH=C:/Users/Admin/pico-sdk
 export PICO_TOOLCHAIN_PATH="C:/Users/Admin/AppData/Local/Arduino15/packages/rp2040/tools/pqt-gcc/5.0.0-9576866"
-export PATH="$PICO_TOOLCHAIN_PATH/bin:/c/mingw64/bin:/c/Program Files/CMake/bin:$PATH"
+export PATH="$PICO_TOOLCHAIN_PATH/bin:/c/Espressif/tools/python/Scripts:/c/Program Files/CMake/bin:$PATH"
 cmake -S . -B build -DPICO_BOARD=pico     # add -DFH_GPS_SIM=1 for indoor bench only
 cmake --build build
-"C:/Users/Admin/picotool-prebuilt/bin/picotool.exe" uf2 convert build/<x>.bin build/<x>.uf2 --family rp2040
+"C:/Users/Admin/picotool-2.3.1/picotool.exe" uf2 convert build/<x>.bin build/<x>.uf2 --family rp2040
 ```
 
 Flash reliability: a bare `cp file.uf2 /d/` to the RPI-RP2 drive does NOT
