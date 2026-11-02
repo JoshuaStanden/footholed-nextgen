@@ -8,21 +8,21 @@ FROZEN EXTERNAL CONTRACT the NextGen rig consumes; it does not design anything n
 passively sniffs Wi-Fi + BLE, logs to microSD (onboard-flash fallback), and sits
 idle waiting for a COLLECTOR to come pull its log. It is the SENSOR; the COLLECTOR
 is a different device.
-- **`main` branch:** Heltec WiFi LoRa 32 V4 (ESP32-S3 + SX1262) workhorse + XIAO
-  ESP32-C3 BLE scanner. 2.4 GHz Wi-Fi only.
+- **`main` branch (2026-11-02, THE ONLY BUILD — Heltec retired):** XIAO ESP32-C5
+  (dual-band 2.4+5 GHz) + stacked Wio-SX1262 LoRa hat as the workhorse, + XIAO
+  ESP32-C3 BLE. First bringup draft.
   https://github.com/JoshuaStanden/FootHoled-Sensor-Stick
-- **`xiao` branch:** XIAO ESP32-C5 (dual-band 2.4+5 GHz) + stacked Wio-SX1262 LoRa
-  hat as the workhorse, + XIAO ESP32-C3 BLE. Adds 5 GHz. First bringup draft.
-  https://github.com/JoshuaStanden/FootHoled-Sensor-Stick/tree/xiao
+- **`heltec-legacy` branch:** the original Heltec WiFi LoRa 32 V4 workhorse +
+  XIAO-C3 BLE scanner (2.4 GHz only), kept for history/fallback — no longer the
+  active build.
 - The stick is effectively a miniature self-contained FootHoled (same C5/C3/SX1262
   parts family as the NextGen peers).
 
 ## THE KEY FACT: the handoff contract is FROZEN and build-agnostic
-The `xiao` README states it explicitly: *"The handoff contract, LoRa parameters
-and BLE UUIDs are kept identical to the Heltec build so a collector works with
-either."* So:
+The handoff contract, LoRa parameters and BLE UUIDs are FIXED across builds
+(the pre-XIAO Heltec build shared them; XIAO keeps them unchanged). So:
 - The NextGen collector implements **ONE** protocol and talks to EVERY stick
-  variant (Heltec or XIAO, present or future). The transport contract is the
+  variant (Heltec-legacy or XIAO, present or future). The transport contract is the
   stable interface; stick internals are free to evolve behind it.
 - This is NOT a protocol the NextGen project has to design. It is already
   specified (twice). The NextGen work is implementing the COLLECTOR END only.
